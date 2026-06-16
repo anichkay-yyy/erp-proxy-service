@@ -11,7 +11,6 @@ from order_status_service.exceptions import DocumentDateNotFound, OrderIdNotFoun
 from order_status_service.http_utils import parse_multipart_form
 from order_status_service.status_response import build_main_endpoint_response
 from order_status_service.transport.saferoute_delivery import build_saferoute_delivery_response
-from order_status_service.transport.yandex_status_lookup import yandex_status_map_response
 from order_status_service.utils import json_default, normalize_track_number, sanitize_filename
 
 
@@ -39,10 +38,6 @@ def run_http_service(
 
             if parsed.path == "/historyStatusMap":
                 self.handle_history_status_map(parsed.query)
-                return
-
-            if parsed.path == "/yandex/status-map":
-                self.send_json(200, yandex_status_map_response())
                 return
 
             if parsed.path == "/getOrderIdByNumber":

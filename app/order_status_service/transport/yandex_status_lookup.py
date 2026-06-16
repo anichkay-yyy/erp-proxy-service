@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-import os
-
-from order_status_service.config import YANDEX_STATUS_MODEL_SOURCE
-
 YANDEX_SCHEME_STATUS_GROUPS = {
     "Создание заказа": [
         "DRAFT",
@@ -79,15 +75,6 @@ YANDEX_CANCEL_REASON_LABELS = {
     "CANCELLED_USER": "Заказ отменён пользователем",
     "SORTING_CENTER_CANCELLED": "Заказ отменён сортировочным центром",
 }
-
-
-def yandex_status_map_response() -> dict:
-    return {
-        "source": os.environ.get("YANDEX_STATUS_MODEL_SOURCE", YANDEX_STATUS_MODEL_SOURCE),
-        "scheme_status_groups": YANDEX_SCHEME_STATUS_GROUPS,
-        "outside_scheme_statuses": YANDEX_OUTSIDE_SCHEME_STATUSES,
-        "cancel_reasons": YANDEX_CANCEL_REASON_LABELS,
-    }
 
 
 def lookup_yandex_status(status: str | None, reason: str | None = None) -> dict:
