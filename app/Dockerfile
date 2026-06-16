@@ -14,6 +14,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY erp_proxy.py .
+COPY alembic.ini .
+COPY alembic ./alembic
 COPY order_status_service ./order_status_service
 
 USER app

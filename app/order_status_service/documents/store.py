@@ -1,5 +1,4 @@
 import json
-import threading
 import uuid
 from datetime import date
 
@@ -19,8 +18,6 @@ class DocumentStore:
     def __init__(self, database_url: str | None, retention_days: int = DEFAULT_DOCUMENT_RETENTION_DAYS):
         self.database_url = database_url
         self.retention_days = retention_days
-        self._schema_ready = False
-        self._schema_lock = threading.Lock()
 
     @property
     def enabled(self) -> bool:
@@ -33,61 +30,7 @@ class DocumentStore:
             raise RuntimeError("psycopg is not installed")
         return psycopg.connect(self.database_url, row_factory=dict_row)
 
-    def ensure_schema(self) -> None:
-        if self._schema_ready:
-            return
-        with self._schema_lock:
-            if self._schema_ready:
-                return
-            with self._connect() as conn:
-                conn.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS document_uploads (
-                        id UUID PRIMARY KEY,
-                        document_date DATE NOT NULL,
-                        original_filename TEXT NOT NULL,
-                        content_type TEXT,
-                        size_bytes INTEGER NOT NULL,
-                        raw_bytes BYTEA NOT NULL,
-                        status TEXT NOT NULL DEFAULT 'uploaded',
-                        parse_status TEXT NOT NULL DEFAULT 'pending',
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-                        expires_at TIMESTAMPTZ NOT NULL
-                    )
-                    """
-                )
-                conn.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS document_records (
-                        id UUID PRIMARY KEY,
-                        document_id UUID NOT NULL REFERENCES document_uploads(id) ON DELETE CASCADE,
-                        record_type TEXT NOT NULL,
-                        agent_order_number TEXT,
-                        delivery_address TEXT,
-                        payload JSONB NOT NULL,
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-                        expires_at TIMESTAMPTZ NOT NULL
-                    )
-                    """
-                )
-                conn.execute("ALTER TABLE document_records ADD COLUMN IF NOT EXISTS agent_order_number TEXT")
-                conn.execute("ALTER TABLE document_records ADD COLUMN IF NOT EXISTS delivery_address TEXT")
-                conn.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS idx_document_uploads_expires_at
-                    ON document_uploads (expires_at)
-                    """
-                )
-                conn.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS idx_document_records_document_id
-                    ON document_records (document_id)
-                    """
-                )
-            self._schema_ready = True
-
     def cleanup_expired(self) -> None:
-        self.ensure_schema()
         with self._connect() as conn:
             conn.execute("DELETE FROM document_uploads WHERE expires_at <= now()")
             conn.execute("DELETE FROM document_records WHERE expires_at <= now()")
@@ -211,7 +154,6 @@ class DocumentStore:
         return [dict(row) for row in rows]
 
     def delete_document(self, document_id: str) -> bool:
-        self.ensure_schema()
         try:
             normalized_document_id = str(uuid.UUID(str(document_id)))
         except ValueError as exc:
@@ -281,5 +223,4 @@ class DocumentStore:
                 },
             ).fetchone()
         return dict(row) if row else None
-
 

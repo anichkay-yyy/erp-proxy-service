@@ -111,3 +111,15 @@ Document env:
 - `ERP_PROXY_DATABASE_URL` or `DATABASE_URL`, required for document endpoints
 - `DOCUMENT_RETENTION_DAYS`, defaults to `3`
 - `DOCUMENT_UPLOAD_MAX_BYTES`, defaults to `20971520`
+
+## Database migrations
+
+The document tables are managed by Alembic. The service runs `alembic upgrade head`
+on startup when `ERP_PROXY_DATABASE_URL` or `DATABASE_URL` is configured.
+
+Manual migration commands:
+
+```bash
+alembic -c alembic.ini upgrade head
+alembic -c alembic.ini current
+```

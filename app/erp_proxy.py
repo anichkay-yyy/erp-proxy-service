@@ -13,6 +13,7 @@ from order_status_service.config import (
 )
 from order_status_service.documents.store import DocumentStore
 from order_status_service.http_server import run_http_service
+from order_status_service.migrations import run_database_migrations
 from order_status_service.service import PlatformAdminService
 from order_status_service.transport.adapters import CompositeTransportAdapter
 from order_status_service.transport.fivepost_client import FivePostClient
@@ -67,6 +68,9 @@ def build_transport_adapter() -> CompositeTransportAdapter:
 
 
 def main() -> int:
+    database_url = os.environ.get("ERP_PROXY_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    run_database_migrations(database_url)
+
     service = PlatformAdminService(
         email=required_env("ERP_PROXY_EMAIL", "PHOTO_PRINT_EMAIL"),
         password=required_env("ERP_PROXY_PASSWORD", "PHOTO_PRINT_PASSWORD"),
@@ -80,7 +84,7 @@ def main() -> int:
     )
 
     document_store = DocumentStore(
-        database_url=os.environ.get("ERP_PROXY_DATABASE_URL") or os.environ.get("DATABASE_URL"),
+        database_url=database_url,
         retention_days=env_int("DOCUMENT_RETENTION_DAYS", DEFAULT_DOCUMENT_RETENTION_DAYS),
     )
 
