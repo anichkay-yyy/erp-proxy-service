@@ -72,6 +72,8 @@ Transport adapters:
   it uses the Yandex Delivery across Russia API at
   `https://b2b-authproxy.taxi.yandex.net/api/b2b/platform/request/*`. The old
   `Яндекс Доставка Apiship` channel is intentionally not mapped to it.
+- `YANDEX_STATUS_MODEL_SOURCE` controls the `source` URL returned by
+  `/yandex/status-map`.
 
 Healthcheck:
 
