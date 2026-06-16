@@ -23,4 +23,4 @@ VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/health' % os.getenv('ERP_PROXY_PORT', '8000'), timeout=2).read()" || exit 1
 
-CMD ["python", "erp_proxy.py", "serve"]
+CMD ["python", "erp_proxy.py"]
