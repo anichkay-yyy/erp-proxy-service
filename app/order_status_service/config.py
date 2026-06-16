@@ -1,0 +1,10 @@
+BASE_URL = "https://platform-admin.fabrika-fotoknigi.com"
+ERP_API_BASE_URL = "https://erp.photo-print.co"
+SAFEROUTE_API_BASE_URL = "https://api.saferoute.ru"
+FIVEPOST_API_BASE_URL = "https://api-omni.x5.ru"
+YANDEX_DELIVERY_API_BASE_URL = "https://b2b-authproxy.taxi.yandex.net"
+DEFAULT_COOKIE_JAR = ".platform_admin_cookies.txt"
+DEFAULT_BY_DATE = "01/01/2024 - 12/31/2030"
+DEFAULT_ERP_API_COMPANY_SLUG = "wavwh"
+DEFAULT_DOCUMENT_RETENTION_DAYS = 3
+DEFAULT_DOCUMENT_UPLOAD_MAX_BYTES = 20 * 1024 * 1024

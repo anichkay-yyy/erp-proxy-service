@@ -1,0 +1,48 @@
+services:
+  order-status-postgres:
+    image: postgres:16-alpine
+    container_name: order-status-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: erp_proxy
+    volumes:
+      - order_status_postgres_data:/var/lib/postgresql/data
+    networks:
+      - mary-20_default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d erp_proxy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  order-status-service:
+    build: ./app
+    container_name: order-status-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ERP_PROXY_HOST: 0.0.0.0
+      ERP_PROXY_PORT: "8000"
+      ERP_PROXY_COOKIE_JAR: /data/platform_admin_cookies.txt
+      ERP_PROXY_DATABASE_URL: postgresql://postgres:postgres@order-status-postgres:5432/erp_proxy
+      DOCUMENT_RETENTION_DAYS: "3"
+      DOCUMENT_UPLOAD_MAX_BYTES: "20971520"
+    volumes:
+      - ./data:/data
+    ports:
+      - "127.0.0.1:3935:8000"
+    networks:
+      - mary-20_default
+    depends_on:
+      order-status-postgres:
+        condition: service_healthy
+
+volumes:
+  order_status_postgres_data:
+
+networks:
+  mary-20_default:
+    external: true

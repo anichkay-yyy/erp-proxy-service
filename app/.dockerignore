@@ -1,0 +1,8 @@
+.env
+.platform_admin_cookies.txt
+platform_admin_cookies.txt
+__pycache__/
+*.pyc
+*.pyo
+order-*.json
+.DS_Store
