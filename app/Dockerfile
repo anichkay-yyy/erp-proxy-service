@@ -8,6 +8,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apk add --no-cache --upgrade libcrypto3 libssl3
+
 RUN addgroup -S app && adduser -S app -G app && mkdir -p /data && chown app:app /data
 
 COPY requirements.txt .
