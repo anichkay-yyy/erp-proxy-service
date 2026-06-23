@@ -20,6 +20,27 @@ def widgets_catalog_json() -> str:
     return files("order_status_service.widgets").joinpath("widgets.json").read_text(encoding="utf-8")
 
 
+_DOCUMENTS_API_PATH = "/api/documents"
+_WIDGET_DOCUMENTS_API_PATH = "/widgets/documents/api/documents"
+_DOCUMENTS_API_PREFIXES = (
+    f"{_DOCUMENTS_API_PATH}/",
+    f"{_WIDGET_DOCUMENTS_API_PATH}/",
+)
+
+
+def is_documents_api_path(path: str) -> bool:
+    """Return true when a request targets the documents API."""
+    return path in (_DOCUMENTS_API_PATH, _WIDGET_DOCUMENTS_API_PATH)
+
+
+def document_id_from_api_path(path: str) -> str | None:
+    """Extract a document id from a documents API subpath."""
+    for prefix in _DOCUMENTS_API_PREFIXES:
+        if path.startswith(prefix):
+            return path[len(prefix) :]
+    return None
+
+
 def run_http_service(
     service: PlatformAdminService,
     host: str,
@@ -50,7 +71,7 @@ def run_http_service(
                 self.send_redirect(308, "/widgets/documents")
                 return
 
-            if parsed.path == "/api/documents":
+            if is_documents_api_path(parsed.path):
                 self.handle_list_documents(parsed.query)
                 return
 
@@ -66,7 +87,7 @@ def run_http_service(
 
         def do_POST(self):
             parsed = urlparse(self.path)
-            if parsed.path == "/api/documents":
+            if is_documents_api_path(parsed.path):
                 self.handle_upload_document()
                 return
 
@@ -74,12 +95,12 @@ def run_http_service(
 
         def do_DELETE(self):
             parsed = urlparse(self.path)
-            if parsed.path.startswith("/api/documents/"):
-                document_id = parsed.path.rsplit("/", 1)[-1]
+            document_id = document_id_from_api_path(parsed.path)
+            if document_id is not None:
                 self.handle_delete_document(document_id)
                 return
 
-            if parsed.path == "/api/documents":
+            if is_documents_api_path(parsed.path):
                 params = parse_qs(parsed.query)
                 document_id = (params.get("id") or [""])[0]
                 self.handle_delete_document(document_id)
