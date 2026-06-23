@@ -3,15 +3,21 @@ from __future__ import annotations
 import json
 from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from importlib.resources import files
 from urllib.parse import parse_qs, urlparse
 
 from order_status_service.config import DEFAULT_DOCUMENT_UPLOAD_MAX_BYTES
-from order_status_service.documents.html import documents_app_html
+from order_status_service.widgets.documents import documents_app_html
 from order_status_service.exceptions import DocumentDateNotFound, OrderIdNotFound, ProductionHistoryNotFound
 from order_status_service.http_utils import parse_multipart_form
 from order_status_service.status_response import build_main_endpoint_response
 from order_status_service.transport.saferoute_delivery import build_saferoute_delivery_response
 from order_status_service.utils import json_default, normalize_track_number, sanitize_filename
+
+
+def widgets_catalog_json() -> str:
+    """Read the built-in widgets catalog."""
+    return files("order_status_service.widgets").joinpath("widgets.json").read_text(encoding="utf-8")
 
 
 def run_http_service(
@@ -28,8 +34,20 @@ def run_http_service(
                 self.send_text(200, "ok\n")
                 return
 
-            if parsed.path in ("/documents", "/documents/"):
+            if parsed.path == "/widgets/widgets.json":
+                self.send_json_text(200, widgets_catalog_json())
+                return
+
+            if parsed.path in ("/widgets", "/widgets/"):
+                self.send_redirect(308, "/widgets/widgets.json")
+                return
+
+            if parsed.path in ("/widgets/documents", "/widgets/documents/"):
                 self.send_html(200, documents_app_html())
+                return
+
+            if parsed.path in ("/documents", "/documents/"):
+                self.send_redirect(308, "/widgets/documents")
                 return
 
             if parsed.path == "/api/documents":
@@ -247,6 +265,20 @@ def run_http_service(
             self.end_headers()
             self.wfile.write(encoded)
 
+        def send_redirect(self, status: int, location: str):
+            self.send_response(status)
+            self.send_header("Location", location)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def send_json_text(self, status: int, body: str):
+            encoded = body.encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.write(encoded)
+
         def send_json(self, status: int, body: dict):
             encoded = json.dumps(body, ensure_ascii=False, default=json_default).encode("utf-8")
             self.send_response(status)
@@ -257,7 +289,8 @@ def run_http_service(
 
     server = ThreadingHTTPServer((host, port), Handler)
     print(f"serving http://{host}:{port}/getOrderIdByNumber?trackNumber=376831-7btxs")
-    print(f"serving http://{host}:{port}/documents")
+    print(f"serving http://{host}:{port}/widgets/widgets.json")
+    print(f"serving http://{host}:{port}/widgets/documents")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

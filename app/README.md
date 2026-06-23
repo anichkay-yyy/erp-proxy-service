@@ -84,7 +84,13 @@ curl 'http://127.0.0.1:8000/health'
 Small upload UI:
 
 ```bash
-open 'http://127.0.0.1:8000/documents'
+open 'http://127.0.0.1:8000/widgets/documents'
+```
+
+Widgets catalog:
+
+```bash
+curl 'http://127.0.0.1:8000/widgets/widgets.json'
 ```
 
 API:
