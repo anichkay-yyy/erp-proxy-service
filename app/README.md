@@ -81,7 +81,8 @@ curl 'http://127.0.0.1:8000/health'
 
 ## Documents
 
-Small upload UI:
+Small upload UI. The widget accepts multiple PDFs at once and uploads them
+sequentially with the selected document date:
 
 ```bash
 open 'http://127.0.0.1:8000/widgets/documents'

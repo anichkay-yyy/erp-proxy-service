@@ -253,7 +253,7 @@ def documents_app_html() -> str:
         </label>
         <label>
           PDF-документ
-          <input name="document" type="file" accept="application/pdf,.pdf" required>
+          <input name="document" type="file" accept="application/pdf,.pdf" multiple required>
         </label>
         <button id="submit" class="button" type="submit">Загрузить</button>
       </form>
@@ -351,16 +351,40 @@ def documents_app_html() -> str:
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       submit.disabled = true;
-      setStatus('Загружаю документ...');
+      const documentDate = form.elements.document_date.value;
+      const files = Array.from(form.elements.document.files || []);
+      if (!files.length) {
+        setStatus('Выберите хотя бы один PDF-документ.', 'error');
+        submit.disabled = false;
+        return;
+      }
+      setStatus(files.length === 1 ? 'Загружаю документ...' : `Загружаю документы: 0/${files.length}`);
       try {
-        const response = await fetch(documentsApi, {
-          method: 'POST',
-          body: new FormData(form),
-        });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || 'Документ не загружен');
+        let uploaded = 0;
+        for (const file of files) {
+          const body = new FormData();
+          body.append('document_date', documentDate);
+          body.append('document', file, file.name);
+          const response = await fetch(documentsApi, {
+            method: 'POST',
+            body,
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(`${file.name}: ${payload.error || 'документ не загружен'}`);
+          }
+          uploaded += 1;
+          if (files.length > 1) {
+            setStatus(`Загружаю документы: ${uploaded}/${files.length}`);
+          }
+        }
         form.reset();
-        setStatus('Документ загружен и обработан.', 'ok');
+        setStatus(
+          files.length === 1
+            ? 'Документ загружен и обработан.'
+            : `Документы загружены и обработаны: ${files.length}.`,
+          'ok',
+        );
         await loadDocuments();
       } catch (error) {
         setStatus(error.message, 'error');
