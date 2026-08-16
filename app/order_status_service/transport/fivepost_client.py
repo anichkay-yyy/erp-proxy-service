@@ -143,7 +143,7 @@ class FivePostClient:
             or self._status_label(latest_status)
         )
         carrier_track_number = self._carrier_track_number(payload)
-        tracking_url = self._tracking_url(payload, carrier_track_number or lookup_number)
+        tracking_url = self._tracking_url(payload, self._public_tracking_number(payload))
         if tracking_url and not payload.get("trackingUrl") and not payload.get("tracking_url"):
             payload = {**payload, "trackingUrl": tracking_url}
 
@@ -222,7 +222,18 @@ class FivePostClient:
         return None
 
     @staticmethod
-    def _tracking_url(payload: dict, track_number: str | None) -> str | None:
+    def _public_tracking_number(payload: dict) -> str | None:
+        order = payload.get("order") if isinstance(payload.get("order"), dict) else {}
+        details = payload.get("details") if isinstance(payload.get("details"), dict) else {}
+        for source in (order, details):
+            for key in ("senderOrderId", "clientOrderId", "sender_order_id", "client_order_id"):
+                value = str(source.get(key) or "").strip()
+                if value:
+                    return value
+        return None
+
+    @staticmethod
+    def _tracking_url(payload: dict, public_order_number: str | None) -> str | None:
         order = payload.get("order") if isinstance(payload.get("order"), dict) else {}
         details = payload.get("details") if isinstance(payload.get("details"), dict) else {}
         for source in (payload, order, details):
@@ -231,10 +242,10 @@ class FivePostClient:
                 if value is not None and str(value).strip():
                     return str(value).strip()
 
-        track = str(track_number or "").strip()
-        if not track:
+        order_number = str(public_order_number or "").strip()
+        if not order_number:
             return None
-        return f"https://fivepost.ru/tracking/?id={quote(track, safe='')}"
+        return f"https://fivepost.ru/tracking/?id={quote(order_number, safe='')}"
 
     @staticmethod
     def _latest_status(payload: dict) -> dict:
