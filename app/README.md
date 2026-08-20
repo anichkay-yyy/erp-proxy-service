@@ -31,6 +31,9 @@ If platform-admin does not find the order, the proxy tries
 `https://api.saferoute.ru/site/tracking/{number}` first. When SafeRoute returns
 a tracking code, the proxy normalizes that code and retries platform-admin; if
 that retry also fails, the endpoint returns `404`.
+Transport search results are accepted only when an order or tracking identifier
+matches the requested number; unrelated results are treated as not found.
+5Post fallback searches only its verifiable sender/client order identifiers.
 If the platform-admin `post_production_finished_at` field is present, it checks uploaded delivery documents:
 
 - first the date when `post_production_finished` was assigned;
