@@ -161,9 +161,6 @@ class FivePostClient:
         variants = [
             {"senderOrderId": number},
             {"clientOrderId": number},
-            {"omniBarcode": number},
-            {"cargoBarcode": number},
-            {"barcode": number},
         ]
         normalized = normalize_track_number(number)
         if normalized and normalized != number:
@@ -186,7 +183,7 @@ class FivePostClient:
                 continue
             if any(self._same_number(order.get(field), number) for field in exact_fields):
                 return order
-        return next((order for order in content if isinstance(order, dict)), None)
+        return None
 
     @staticmethod
     def _same_number(left, right: str) -> bool:

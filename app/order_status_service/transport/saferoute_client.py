@@ -197,7 +197,7 @@ class SafeRouteClient:
                     if value is not None and normalize_track_number(str(value)) == normalized_needle:
                         return candidate
 
-        return candidates[0]
+        return None
 
     def get_tracking_data(self, number: str) -> dict | None:
         result = self.find_by_number(number)
@@ -256,4 +256,3 @@ class SafeRouteClient:
         if not isinstance(history, list):
             return {}
         return next((item for item in history if isinstance(item, dict)), {})
-
